@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Firebase Messaging Demo Client</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-messaging.js"></script>
+  </head>
+  <body>
+    <h1>Firebase Messaging Demo Client</h1>
+    <button id="subscribe">Subscribe to Notifications</button>
+    <pre id="token"></pre>
+
+    <script type="module">
+      // TODO: Replace the following with your app's Firebase project configuration
+      import { firebaseConfig, vapidKey } from "./config.js";
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const messaging = firebase.messaging();
+
+      messaging.onMessage((payload) => {
+        console.log("Message received. ", payload);
+        // Customize notification here
+        const notificationTitle = payload.notification.title;
+        const notificationOptions = {
+          body: payload.notification.body,
+          icon: payload.notification.icon,
+        };
+
+        if (!("Notification" in window)) {
+          console.log("This browser does not support system notifications");
+        }
+        // Let's check whether notification permissions have already been granted
+        else if (Notification.permission === "granted") {
+          // If it's okay let's create a notification
+          var notification = new Notification(
+            notificationTitle,
+            notificationOptions
+          );
+        }
+      });
+
+      document.getElementById("subscribe").onclick = function () {
+        messaging
+          .getToken({ vapidKey: vapidKey })
+          .then((currentToken) => {
+            if (currentToken) {
+              console.log("FCM Registration Token:", currentToken);
+              document.getElementById("token").innerHTML = currentToken;
+              // send currentToken to server
+            } else {
+              // Show permission request.
+              console.log(
+                "No registration token available. Request permission to generate one."
+              );
+            }
+          })
+          .catch((err) => {
+            console.log("An error occurred while retrieving token. ", err);
+          });
+      };
+    </script>
+  </body>
+</html>
